@@ -1,11 +1,9 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import HabitList from './components/HabitList';
 import AddHabitForm from './components/AddHabitForm';
 import Analytics from './components/Analytics';
 import Dashboard from './components/Dashboard';
 import MotivationalQuote from './components/MotivationalQuote';
-import Badges from './components/Badges';
 import LevelDisplay from './components/LevelDisplay';
 import ShareProgress from './components/ShareProgress';
 import HabitSuggestions from './components/HabitSuggestions';
@@ -13,7 +11,7 @@ import DataManagement from './components/DataManagement';
 
 const App = () => {
   const [habits, setHabits] = useState([]);
-  const [categories, setCategories] = useState([
+  const [categories] = useState([
     { id: 1, name: 'Health', color: '#28a745' }, // Green
     { id: 2, name: 'Work', color: '#007bff' },   // Blue
     { id: 3, name: 'Personal', color: '#ffc107' }, // Yellow
@@ -27,7 +25,6 @@ const App = () => {
   const layoutDropdownRef = useRef(null);
   const [level, setLevel] = useState(1);
   const [xp, setXp] = useState(0);
-  const [newSuggestedHabitName, setNewSuggestedHabitName] = useState('');
   const [customSuggestedHabits, setCustomSuggestedHabits] = useState([]);
   const XP_PER_LEVEL = 100;
 
@@ -57,6 +54,16 @@ const App = () => {
   const calculateEarnedBadges = (habits) => {
     return allBadges.filter(badge => badge.condition(habits));
   };
+
+  const setReminder = useCallback((id, time) => {
+    setHabits(prevHabits => 
+      prevHabits.map((habit) =>
+        habit.id === id
+          ? { ...habit, reminderTime: time }
+          : habit
+      )
+    );
+  }, []);
 
   useEffect(() => {
     const storedHabits = JSON.parse(localStorage.getItem('habits'));
@@ -126,7 +133,6 @@ const App = () => {
         reminderDate.setHours(hours, minutes, 0, 0);
 
         if (reminderDate.getTime() < now.getTime()) {
-          // If reminder time is in the past for today, schedule for tomorrow
           reminderDate.setDate(reminderDate.getDate() + 1);
         }
 
@@ -142,14 +148,12 @@ const App = () => {
               });
 
               notification.onclick = () => {
-                // Focus the tab if clicked
                 window.focus();
               };
 
-              // Add snooze functionality (example: snooze for 10 minutes)
               notification.onclose = (event) => {
-                if (event.isTrusted) { // Check if user closed the notification
-                  const snoozedTime = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes from now
+                if (event.isTrusted) {
+                  const snoozedTime = new Date(now.getTime() + 10 * 60 * 1000);
                   const snoozedHours = snoozedTime.getHours().toString().padStart(2, '0');
                   const snoozedMinutes = snoozedTime.getMinutes().toString().padStart(2, '0');
                   setReminder(habit.id, `${snoozedHours}:${snoozedMinutes}`);
@@ -164,23 +168,22 @@ const App = () => {
         }
       }
     });
-  }, [habits, theme, level, xp]);
+  }, [habits, theme, level, xp, customSuggestedHabits, setReminder]);
 
   const addHabit = (habit) => {
     setHabits([
       ...habits,
-      { ...habit, id: Date.now(), history: [], notes: [], frequency: habit.frequency, isTimeBased: habit.isTimeBased, targetDuration: habit.targetDuration, reminderTime: null },
+      { 
+        ...habit, 
+        id: Date.now(), 
+        history: [], 
+        notes: [], 
+        frequency: habit.frequency, 
+        isTimeBased: habit.isTimeBased, 
+        targetDuration: habit.targetDuration, 
+        reminderTime: null 
+      },
     ]);
-  };
-
-  const setReminder = (id, time) => {
-    setHabits(
-      habits.map((habit) =>
-        habit.id === id
-          ? { ...habit, reminderTime: time }
-          : habit
-      )
-    );
   };
 
   const deleteHabit = (id) => {
@@ -196,7 +199,7 @@ const App = () => {
       )
     );
     setXp(prevXp => {
-      const newXp = prevXp + 10; // Award 10 XP per completion
+      const newXp = prevXp + 10;
       if (newXp >= XP_PER_LEVEL) {
         setLevel(prevLevel => prevLevel + 1);
         return newXp - XP_PER_LEVEL;
@@ -228,8 +231,6 @@ const App = () => {
   const removeCustomSuggestedHabit = (index) => {
     setCustomSuggestedHabits(prev => prev.filter((_, i) => i !== index));
   };
-
-  
 
   return (
     <div className={`container mt-5 ${theme}`}>
@@ -277,28 +278,28 @@ const App = () => {
           </button>
           <ul className={`dropdown-menu ${isLayoutDropdownOpen ? 'show' : ''}`}>
             <li>
-              <a className="dropdown-item" href="#" onClick={() => {
+              <button className="dropdown-item" onClick={() => {
                 setLayout('default');
                 setIsLayoutDropdownOpen(false);
               }}>
                 Default
-              </a>
+              </button>
             </li>
             <li>
-              <a className="dropdown-item" href="#" onClick={() => {
+              <button className="dropdown-item" onClick={() => {
                 setLayout('analytics-first');
                 setIsLayoutDropdownOpen(false);
               }}>
                 Analytics First
-              </a>
+              </button>
             </li>
             <li>
-              <a className="dropdown-item" href="#" onClick={() => {
+              <button className="dropdown-item" onClick={() => {
                 setLayout('full-width-habits');
                 setIsLayoutDropdownOpen(false);
               }}>
                 Full Width Habits
-              </a>
+              </button>
             </li>
           </ul>
         </li>
@@ -328,15 +329,11 @@ const App = () => {
       )}
 
       {activeTab === 'analytics' && (
-        <Analytics habits={habits} categories={categories} earnedBadges={calculateEarnedBadges(habits)} />
-      )}
-
-      {activeTab === 'analytics' && (
-        <LevelDisplay level={level} xp={xp} XP_PER_LEVEL={XP_PER_LEVEL} />
-      )}
-
-      {activeTab === 'analytics' && (
-        <ShareProgress habits={habits} level={level} />
+        <>
+          <Analytics habits={habits} categories={categories} earnedBadges={calculateEarnedBadges(habits)} />
+          <LevelDisplay level={level} xp={xp} XP_PER_LEVEL={XP_PER_LEVEL} />
+          <ShareProgress habits={habits} level={level} />
+        </>
       )}
 
       {activeTab === 'dashboard' && (
