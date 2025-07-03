@@ -28,7 +28,7 @@ const HabitCalendar = ({ habit }) => {
   };
 
   return (
-    <div className="mt-3">
+    <div className="card card-body mt-3 shadow-sm">
       <Calendar tileClassName={tileClassName} />
     </div>
   );

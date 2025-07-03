@@ -19,14 +19,14 @@ const HabitSuggestions = ({ habits, addHabit, customSuggestedHabits }) => {
   }
 
   return (
-    <div className="card mt-4">
+    <div className="card shadow-sm mt-4 mb-4">
       <div className="card-body">
-        <h5 className="card-title">Suggested Habits</h5>
-        <div className="d-flex flex-wrap">
+        <h5 className="card-title text-primary mb-3">Suggested Habits</h5>
+        <div className="d-flex flex-wrap gap-2">
           {allSuggestions.map((suggestion, index) => (
             <button
               key={index}
-              className="btn btn-outline-primary btn-sm m-1"
+              className="btn btn-outline-success btn-sm"
               onClick={() => addHabit(suggestion)}
             >
               {suggestion.name}

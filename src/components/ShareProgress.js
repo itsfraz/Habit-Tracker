@@ -19,9 +19,11 @@ const ShareProgress = ({ habits, level }) => {
   };
 
   return (
-    <div className="mt-5 text-center">
-      <button className="btn btn-info" onClick={handleShare}>
-        Share My Progress
+    <div className="card shadow-sm mt-4 p-3 text-center">
+      <h5 className="card-title">Share Your Progress!</h5>
+      <p className="card-text">Let your friends know about your achievements.</p>
+      <button className="btn btn-primary btn-lg" onClick={handleShare}>
+        <i className="bi bi-share-fill me-2"></i> Share My Progress
       </button>
     </div>
   );

@@ -9,16 +9,19 @@ const ReminderSettings = ({ habit, setReminder }) => {
   };
 
   return (
-    <div className="input-group mt-2">
-      <input
-        type="time"
-        className="form-control"
-        value={time}
-        onChange={(e) => setTime(e.target.value)}
-      />
-      <button className="btn btn-outline-secondary" onClick={handleSetReminder}>
-        Set Reminder
-      </button>
+    <div className="card card-body mt-3 shadow-sm">
+      <h6 className="card-title">Set Reminder</h6>
+      <div className="input-group mt-2">
+        <input
+          type="time"
+          className="form-control"
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+        />
+        <button className="btn btn-primary" onClick={handleSetReminder}>
+          Set Reminder
+        </button>
+      </div>
     </div>
   );
 };

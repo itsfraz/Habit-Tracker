@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import HabitList from './components/HabitList';
 import AddHabitForm from './components/AddHabitForm';
 import Analytics from './components/Analytics';
@@ -8,6 +11,15 @@ import LevelDisplay from './components/LevelDisplay';
 import ShareProgress from './components/ShareProgress';
 import HabitSuggestions from './components/HabitSuggestions';
 import DataManagement from './components/DataManagement';
+import Login from './components/Login';
+import Register from './components/Register';
+import authService from './services/authService';
+import habitService from './services/habitService';
+
+const PrivateRoute = ({ children }) => {
+  const user = authService.getCurrentUser();
+  return user ? children : <Navigate to="/login" />;
+};
 
 const App = () => {
   const [habits, setHabits] = useState([]);
@@ -27,6 +39,25 @@ const App = () => {
   const [xp, setXp] = useState(0);
   const [customSuggestedHabits, setCustomSuggestedHabits] = useState([]);
   const XP_PER_LEVEL = 100;
+  const [currentUser, setCurrentUser] = useState(undefined);
+
+  useEffect(() => {
+    const user = authService.getCurrentUser();
+    if (user) {
+      setCurrentUser(user);
+      habitService.getHabits().then(res => {
+        const habitsWithParsedDates = res.data.map(habit => ({
+          ...habit,
+          history: habit.history.map(entry => ({
+            ...entry,
+            date: new Date(entry.date)
+          }))
+        }));
+        setHabits(habitsWithParsedDates);
+      });
+    }
+  }, []);
+
 
   const allBadges = [
     { id: 1, name: 'First Step', description: 'Track your first habit', icon: 'bi bi-award-fill', condition: (habits) => habits.some(habit => habit.history.length > 0) },
@@ -56,27 +87,21 @@ const App = () => {
   };
 
   const setReminder = useCallback((id, time) => {
-    setHabits(prevHabits => 
-      prevHabits.map((habit) =>
-        habit.id === id
-          ? { ...habit, reminderTime: time }
-          : habit
-      )
-    );
-  }, []);
+    const habitToUpdate = habits.find(h => h._id === id);
+    if (habitToUpdate) {
+      habitService.updateHabit(id, { ...habitToUpdate, reminderTime: time }).then(res => {
+        setHabits(prevHabits =>
+          prevHabits.map((habit) =>
+            habit._id === id
+              ? { ...habit, reminderTime: time }
+              : habit
+          )
+        );
+      });
+    }
+  }, [habits]);
 
   useEffect(() => {
-    const storedHabits = JSON.parse(localStorage.getItem('habits'));
-    if (storedHabits) {
-      const habitsWithParsedDates = storedHabits.map(habit => ({
-        ...habit,
-        history: habit.history.map(entry => ({
-          ...entry,
-          date: new Date(entry.date)
-        }))
-      }));
-      setHabits(habitsWithParsedDates);
-    }
     const storedTheme = localStorage.getItem('theme');
     if (storedTheme) {
       setTheme(storedTheme);
@@ -110,7 +135,6 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('habits', JSON.stringify(habits));
     localStorage.setItem('theme', theme);
     localStorage.setItem('level', level);
     localStorage.setItem('xp', xp);
@@ -144,7 +168,7 @@ const App = () => {
               const notification = new Notification('Habit Reminder', {
                 body: `Time to ${habit.name}!`, 
                 icon: '/logo192.png',
-                data: { habitId: habit.id, reminderTime: habit.reminderTime }
+                data: { habitId: habit._id, reminderTime: habit.reminderTime }
               });
 
               notification.onclick = () => {
@@ -156,14 +180,14 @@ const App = () => {
                   const snoozedTime = new Date(now.getTime() + 10 * 60 * 1000);
                   const snoozedHours = snoozedTime.getHours().toString().padStart(2, '0');
                   const snoozedMinutes = snoozedTime.getMinutes().toString().padStart(2, '0');
-                  setReminder(habit.id, `${snoozedHours}:${snoozedMinutes}`);
+                  setReminder(habit._id, `${snoozedHours}:${snoozedMinutes}`);
                 }
               };
             }
           }, delay);
 
           setHabits(prevHabits => prevHabits.map(h => 
-            h.id === habit.id ? { ...h, reminderTimeoutId: timeoutId } : h
+            h._id === habit._id ? { ...h, reminderTimeoutId: timeoutId } : h
           ));
         }
       }
@@ -171,51 +195,55 @@ const App = () => {
   }, [habits, theme, level, xp, customSuggestedHabits, setReminder]);
 
   const addHabit = (habit) => {
-    setHabits([
-      ...habits,
-      { 
-        ...habit, 
-        id: Date.now(), 
-        history: [], 
-        notes: [], 
-        frequency: habit.frequency, 
-        isTimeBased: habit.isTimeBased, 
-        targetDuration: habit.targetDuration, 
-        reminderTime: null 
-      },
-    ]);
-  };
-
-  const deleteHabit = (id) => {
-    setHabits(habits.filter((habit) => habit.id !== id));
-  };
-
-  const trackHabit = (id, duration = null) => {
-    setHabits(
-      habits.map((habit) =>
-        habit.id === id
-          ? { ...habit, history: [...habit.history, { date: new Date().toISOString(), duration: duration }] }
-          : habit
-      )
-    );
-    setXp(prevXp => {
-      const newXp = prevXp + 10;
-      if (newXp >= XP_PER_LEVEL) {
-        setLevel(prevLevel => prevLevel + 1);
-        return newXp - XP_PER_LEVEL;
-      }
-      return newXp;
+    habitService.addHabit(habit).then(res => {
+      setHabits([...habits, res.data]);
     });
   };
 
+  const deleteHabit = (id) => {
+    habitService.deleteHabit(id).then(() => {
+      setHabits(habits.filter((habit) => habit._id !== id));
+    });
+  };
+
+  const trackHabit = (id, duration = null) => {
+    const habitToUpdate = habits.find(h => h._id === id);
+    if (habitToUpdate) {
+      const updatedHistory = [...habitToUpdate.history, { date: new Date().toISOString(), duration: duration }];
+      habitService.updateHabit(id, { ...habitToUpdate, history: updatedHistory }).then(res => {
+        setHabits(
+          habits.map((habit) =>
+            habit._id === id
+              ? { ...habit, history: updatedHistory }
+              : habit
+          )
+        );
+        setXp(prevXp => {
+          const newXp = prevXp + 10;
+          if (newXp >= XP_PER_LEVEL) {
+            setLevel(prevLevel => prevLevel + 1);
+            return newXp - XP_PER_LEVEL;
+          }
+          return newXp;
+        });
+      });
+    }
+  };
+
   const addNote = (id, note) => {
-    setHabits(
-      habits.map((habit) =>
-        habit.id === id
-          ? { ...habit, notes: [...habit.notes, { id: Date.now(), text: note }] }
-          : habit
-      )
-    );
+    const habitToUpdate = habits.find(h => h._id === id);
+    if (habitToUpdate) {
+      const updatedNotes = [...habitToUpdate.notes, { id: Date.now(), text: note }];
+      habitService.updateHabit(id, { ...habitToUpdate, notes: updatedNotes }).then(res => {
+        setHabits(
+          habits.map((habit) =>
+            habit._id === id
+              ? { ...habit, notes: updatedNotes }
+              : habit
+          )
+        );
+      });
+    }
   };
 
   const toggleTheme = () => {
@@ -232,132 +260,157 @@ const App = () => {
     setCustomSuggestedHabits(prev => prev.filter((_, i) => i !== index));
   };
 
+  const logOut = () => {
+    authService.logout();
+    setCurrentUser(undefined);
+    setHabits([]);
+  };
+
   return (
-    <div className={`container mt-5 ${theme}`}>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="text-center">Habit Tracker</h1>
-        <button className="btn btn-secondary" onClick={toggleTheme}>
-          <i className={`bi bi-${theme === 'light' ? 'moon' : 'sun'}`}></i>
-        </button>
-      </div>
-
-      <MotivationalQuote />
-
-      <ul className="nav nav-tabs mb-4">
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === 'habits' ? 'active' : ''}`}
-            onClick={() => setActiveTab('habits')}
-          >
-            Habits
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === 'analytics' ? 'active' : ''}`}
-            onClick={() => setActiveTab('analytics')}
-          >
-            Analytics
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
-          >
-            Dashboard
-          </button>
-        </li>
-        <li className="nav-item dropdown" ref={layoutDropdownRef}>
-          <button
-            className="nav-link dropdown-toggle"
-            onClick={() => setIsLayoutDropdownOpen(!isLayoutDropdownOpen)}
-            aria-expanded={isLayoutDropdownOpen}
-          >
-            Layout
-          </button>
-          <ul className={`dropdown-menu ${isLayoutDropdownOpen ? 'show' : ''}`}>
-            <li>
-              <button className="dropdown-item" onClick={() => {
-                setLayout('default');
-                setIsLayoutDropdownOpen(false);
-              }}>
-                Default
+    <Router>
+      <div className={`container-fluid py-4 ${theme === 'dark' ? 'bg-dark text-white' : 'bg-light text-dark'}`}>
+        <div className="d-flex justify-content-between align-items-center mb-4 px-3">
+          <h1 className="text-center mb-0">Habit Tracker</h1>
+          <div>
+            {currentUser && (
+              <button className="btn btn-outline-secondary me-2" onClick={logOut}>
+                Logout
               </button>
-            </li>
-            <li>
-              <button className="dropdown-item" onClick={() => {
-                setLayout('analytics-first');
-                setIsLayoutDropdownOpen(false);
-              }}>
-                Analytics First
-              </button>
-            </li>
-            <li>
-              <button className="dropdown-item" onClick={() => {
-                setLayout('full-width-habits');
-                setIsLayoutDropdownOpen(false);
-              }}>
-                Full Width Habits
-              </button>
-            </li>
-          </ul>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === 'data' ? 'active' : ''}`}
-            onClick={() => setActiveTab('data')}
-          >
-            Data
-          </button>
-        </li>
-      </ul>
+            )}
+            <button className="btn btn-outline-secondary" onClick={toggleTheme}>
+              <i className={`bi bi-${theme === 'light' ? 'moon' : 'sun'}`}></i>
+            </button>
+          </div>
+        </div>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <MotivationalQuote />
 
-      {activeTab === 'habits' && (
-        <>
-          <AddHabitForm addHabit={addHabit} categories={categories} customSuggestedHabits={customSuggestedHabits} />
-          <HabitSuggestions habits={habits} addHabit={addHabit} categories={categories} customSuggestedHabits={customSuggestedHabits} />
-          <HabitList
-            habits={habits}
-            deleteHabit={deleteHabit}
-            trackHabit={trackHabit}
-            addNote={addNote}
-            categories={categories}
-            setReminder={setReminder}
+                <ul className="nav nav-pills nav-fill mb-4">
+                  <li className="nav-item">
+                    <button
+                      className={`nav-link ${activeTab === 'habits' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('habits')}
+                    >
+                      Habits
+                    </button>
+                  </li>
+                  <li className="nav-item">
+                    <button
+                      className={`nav-link ${activeTab === 'analytics' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('analytics')}
+                    >
+                      Analytics
+                    </button>
+                  </li>
+                  <li className="nav-item">
+                    <button
+                      className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('dashboard')}
+                    >
+                      Dashboard
+                    </button>
+                  </li>
+                  <li className="nav-item dropdown" ref={layoutDropdownRef}>
+                    <button
+                      className="nav-link dropdown-toggle"
+                      onClick={() => setIsLayoutDropdownOpen(!isLayoutDropdownOpen)}
+                      aria-expanded={isLayoutDropdownOpen}
+                    >
+                      Layout
+                    </button>
+                    <ul className={`dropdown-menu ${isLayoutDropdownOpen ? 'show' : ''}`}>
+                      <li>
+                        <button className="dropdown-item" onClick={() => {
+                          setLayout('default');
+                          setIsLayoutDropdownOpen(false);
+                        }}>
+                          Default
+                        </button>
+                      </li>
+                      <li>
+                        <button className="dropdown-item" onClick={() => {
+                          setLayout('analytics-first');
+                          setIsLayoutDropdownOpen(false);
+                        }}>
+                          Analytics First
+                        </button>
+                      </li>
+                      <li>
+                        <button className="dropdown-item" onClick={() => {
+                          setLayout('full-width-habits');
+                          setIsLayoutDropdownOpen(false);
+                        }}>
+                          Full Width Habits
+                        </button>
+                      </li>
+                    </ul>
+                  </li>
+                  <li className="nav-item">
+                    <button
+                      className={`nav-link ${activeTab === 'data' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('data')}
+                    >
+                      Data
+                    </button>
+                  </li>
+                </ul>
+
+                {activeTab === 'habits' && (
+                  <>
+                    <AddHabitForm addHabit={addHabit} categories={categories} customSuggestedHabits={customSuggestedHabits} />
+                    <HabitSuggestions habits={habits} addHabit={addHabit} categories={categories} customSuggestedHabits={customSuggestedHabits} />
+                    <HabitList
+                      habits={habits}
+                      deleteHabit={deleteHabit}
+                      trackHabit={trackHabit}
+                      addNote={addNote}
+                      categories={categories}
+                      setReminder={setReminder}
+                    />
+                  </>
+                )}
+
+                {activeTab === 'analytics' && (
+                  <>
+                    <Analytics habits={habits} categories={categories} earnedBadges={calculateEarnedBadges(habits)} />
+                    <LevelDisplay level={level} xp={xp} XP_PER_LEVEL={XP_PER_LEVEL} />
+                    <ShareProgress habits={habits} level={level} />
+                  </>
+                )}
+
+                {activeTab === 'dashboard' && (
+                  <Dashboard
+                    habits={habits}
+                    categories={categories}
+                    deleteHabit={deleteHabit}
+                    trackHabit={trackHabit}
+                    addNote={addNote}
+                    layout={layout}
+                  />
+                )}
+
+                {activeTab === 'data' && (
+                  <DataManagement
+                    habits={habits}
+                    categories={categories}
+                    setHabits={setHabits}
+                    customSuggestedHabits={customSuggestedHabits}
+                    addCustomSuggestedHabit={addCustomSuggestedHabit}
+                    removeCustomSuggestedHabit={removeCustomSuggestedHabit}
+                  />
+                )}
+              </PrivateRoute>
+            }
           />
-        </>
-      )}
-
-      {activeTab === 'analytics' && (
-        <>
-          <Analytics habits={habits} categories={categories} earnedBadges={calculateEarnedBadges(habits)} />
-          <LevelDisplay level={level} xp={xp} XP_PER_LEVEL={XP_PER_LEVEL} />
-          <ShareProgress habits={habits} level={level} />
-        </>
-      )}
-
-      {activeTab === 'dashboard' && (
-        <Dashboard
-          habits={habits}
-          categories={categories}
-          deleteHabit={deleteHabit}
-          trackHabit={trackHabit}
-          addNote={addNote}
-          layout={layout}
-        />
-      )}
-
-      {activeTab === 'data' && (
-        <DataManagement
-          habits={habits}
-          categories={categories}
-          setHabits={setHabits}
-          customSuggestedHabits={customSuggestedHabits}
-          addCustomSuggestedHabit={addCustomSuggestedHabit}
-          removeCustomSuggestedHabit={removeCustomSuggestedHabit}
-        />
-      )}
-    </div>
+        </Routes>
+      </div>
+    </Router>
   );
 };
 

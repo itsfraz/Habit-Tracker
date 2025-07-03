@@ -62,8 +62,11 @@ const HabitCompletionChart = ({ habit }) => {
   };
 
   return (
-    <div className="mt-4">
-      <Line data={data} options={options} />
+    <div className="card shadow-sm mt-4">
+      <div className="card-body">
+        <h5 className="card-title text-primary mb-3">{habit.name} Completion Over Time</h5>
+        <Line data={data} options={options} />
+      </div>
     </div>
   );
 };

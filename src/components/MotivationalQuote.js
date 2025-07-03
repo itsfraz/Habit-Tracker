@@ -22,9 +22,9 @@ const MotivationalQuote = () => {
   }, []);
 
   return (
-    <div className="card text-center mb-4">
+    <div className="card text-center bg-light text-dark mb-4 shadow-sm">
       <div className="card-body">
-        <p className="card-text fs-5">{currentQuote}</p>
+        <p className="card-text fs-5 fst-italic">"{currentQuote}"</p>
       </div>
     </div>
   );

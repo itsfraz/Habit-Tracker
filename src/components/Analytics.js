@@ -32,46 +32,82 @@ const Analytics = ({ habits, categories, earnedBadges = [] }) => {
   };
 
   return (
-    <div className="mt-5">
-      <h2>Analytics & Visualization</h2>
+    <div className="card shadow-sm mt-4">
+      <div className="card-header bg-primary text-white">
+        <h3 className="mb-0">Analytics & Visualization</h3>
+      </div>
+      <div className="card-body">
+        <div className="row">
+          <div className="col-md-6 mb-4">
+            <div className="card h-100">
+              <div className="card-body">
+                <h4 className="card-title text-primary mb-3">Habit Success Rates</h4>
+                <ul className="list-group list-group-flush">
+                  {habits.map((habit) => (
+                    <li key={habit.id} className="list-group-item d-flex justify-content-between align-items-center">
+                      {habit.name}
+                      <span className="badge bg-primary rounded-pill">
+                        {calculateHabitSuccessRate(habit).toFixed(2)}%
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
 
-      <h3 className="mt-4">Habit Success Rates</h3>
-      <ul className="list-group">
-        {habits.map((habit) => (
-          <li key={habit.id} className="list-group-item d-flex justify-content-between align-items-center">
-            {habit.name}
-            <span className="badge bg-primary rounded-pill">
-              {calculateHabitSuccessRate(habit).toFixed(2)}%
-            </span>
-          </li>
-        ))}
-      </ul>
+          <div className="col-md-6 mb-4">
+            <div className="card h-100">
+              <div className="card-body">
+                <h4 className="card-title text-primary mb-3">Category Success Rates</h4>
+                <ul className="list-group list-group-flush">
+                  {categories.map((category) => (
+                    <li key={category.id} className="list-group-item d-flex justify-content-between align-items-center">
+                      {category.name}
+                      <span className="badge bg-success rounded-pill">
+                        {calculateCategorySuccessRate(category.name).toFixed(2)}%
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <h3 className="mt-4">Category Success Rates</h3>
-      <ul className="list-group">
-        {categories.map((category) => (
-          <li key={category.id} className="list-group-item d-flex justify-content-between align-items-center">
-            {category.name}
-            <span className="badge bg-success rounded-pill">
-              {calculateCategorySuccessRate(category.name).toFixed(2)}%
-            </span>
-          </li>
-        ))}
-      </ul>
+        <div className="row">
+          <div className="col-12 mb-4">
+            <div className="card">
+              <div className="card-body">
+                <h4 className="card-title text-primary mb-3">Habit Completion Over Time</h4>
+                {habits.map((habit) => (
+                  <HabitCompletionChart key={habit.id} habit={habit} />
+                ))}
+              </div>
+            </div>
+          </div>
 
-      <h3 className="mt-4">Habit Completion Over Time</h3>
-      {habits.map((habit) => (
-        <HabitCompletionChart key={habit.id} habit={habit} />
-      ))}
+          <div className="col-12 mb-4">
+            <div className="card">
+              <div className="card-body">
+                <h4 className="card-title text-primary mb-3">Streak Heatmaps</h4>
+                {habits.map((habit) => (
+                  <StreakHeatmap key={habit.id} habit={habit} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <h3 className="mt-4">Streak Heatmaps</h3>
-      {habits.map((habit) => (
-        <StreakHeatmap key={habit.id} habit={habit} />
-      ))}
-
-      <ProgressReports habits={habits} />
-
-      <Badges earnedBadges={earnedBadges} />
+        <div className="row">
+          <div className="col-12 mb-4">
+            <ProgressReports habits={habits} />
+          </div>
+          <div className="col-12 mb-4">
+            <Badges earnedBadges={earnedBadges} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

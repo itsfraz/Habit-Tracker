@@ -105,27 +105,32 @@ const DataManagement = ({ habits, categories, setHabits, customSuggestedHabits, 
   };
 
   return (
-    <div className="card mt-4">
-      <div className="card-header">
-        <h3>Data Management</h3>
+    <div className="card shadow-sm mt-4">
+      <div className="card-header bg-primary text-white">
+        <h3 className="mb-0">Data Management</h3>
       </div>
       <div className="card-body">
-        <h4>Export Habits</h4>
-        <button className="btn btn-primary me-2" onClick={exportHabitsToJson}>
-          Export to JSON
-        </button>
-        <button className="btn btn-primary" onClick={exportHabitsToCsv}>
-          Export to CSV
-        </button>
-        <button className="btn btn-info ms-2" onClick={handlePrintReport}>
-          Print Report
-        </button>
+        <h4 className="mb-3">Export Habits</h4>
+        <div className="d-grid gap-2 d-md-block mb-4">
+          <button className="btn btn-primary me-md-2 mb-2 mb-md-0" onClick={exportHabitsToJson}>
+            <i className="bi bi-file-earmark-arrow-down me-2"></i>Export to JSON
+          </button>
+          <button className="btn btn-primary me-md-2 mb-2 mb-md-0" onClick={exportHabitsToCsv}>
+            <i className="bi bi-file-earmark-spreadsheet me-2"></i>Export to CSV
+          </button>
+          <button className="btn btn-info" onClick={handlePrintReport}>
+            <i className="bi bi-printer me-2"></i>Print Report
+          </button>
+        </div>
 
-        <h4 className="mt-4">Import Habits</h4>
-        <input type="file" accept=".json" onChange={importHabitsFromJson} className="form-control" />
-        <p className="text-muted mt-2">Importing habits will overwrite existing habits.</p>
+        <h4 className="mt-4 mb-3">Import Habits</h4>
+        <div className="input-group mb-3">
+          <input type="file" accept=".json" onChange={importHabitsFromJson} className="form-control" id="importJsonFile" />
+          <label className="input-group-text" htmlFor="importJsonFile">Upload JSON</label>
+        </div>
+        <p className="text-muted">Importing habits will overwrite existing habits. Please back up your data first.</p>
 
-        <h4 className="mt-4">Custom Suggested Habits</h4>
+        <h4 className="mt-4 mb-3">Custom Suggested Habits</h4>
         <div className="input-group mb-3">
           <input
             type="text"
@@ -135,7 +140,7 @@ const DataManagement = ({ habits, categories, setHabits, customSuggestedHabits, 
             onChange={(e) => setNewSuggestedHabitName(e.target.value)}
           />
           <button className="btn btn-success" onClick={addCustomSuggestedHabitHandler}>
-            Add
+            <i className="bi bi-plus-lg me-2"></i>Add
           </button>
         </div>
         <ul className="list-group">
@@ -143,7 +148,7 @@ const DataManagement = ({ habits, categories, setHabits, customSuggestedHabits, 
             <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
               {habit.name}
               <button className="btn btn-danger btn-sm" onClick={() => removeCustomSuggestedHabit(index)}>
-                Remove
+                <i className="bi bi-trash me-2"></i>Remove
               </button>
             </li>
           ))}

@@ -42,36 +42,41 @@ const ProgressReports = ({ habits }) => {
   const yearlyReport = getYearlyReport();
 
   return (
-    <div className="mt-5">
-      <h3>Monthly Progress Reports</h3>
-      {Object.keys(monthlyReport).sort().map(month => (
-        <div key={month} className="card mb-3">
-          <div className="card-header">{month}</div>
-          <ul className="list-group list-group-flush">
-            {Object.keys(monthlyReport[month]).map(habitName => (
-              <li key={habitName} className="list-group-item d-flex justify-content-between align-items-center">
-                {habitName}
-                <span className="badge bg-info rounded-pill">{monthlyReport[month][habitName]} completions</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+    <div className="card shadow-sm mt-4">
+      <div className="card-header bg-success text-white">
+        <h3 className="mb-0">Progress Reports</h3>
+      </div>
+      <div className="card-body">
+        <h4 className="mb-3">Monthly Progress</h4>
+        {Object.keys(monthlyReport).sort().map(month => (
+          <div key={month} className="card mb-3">
+            <div className="card-header bg-light">{month}</div>
+            <ul className="list-group list-group-flush">
+              {Object.keys(monthlyReport[month]).map(habitName => (
+                <li key={habitName} className="list-group-item d-flex justify-content-between align-items-center">
+                  {habitName}
+                  <span className="badge bg-info rounded-pill">{monthlyReport[month][habitName]} completions</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
 
-      <h3 className="mt-4">Yearly Progress Reports</h3>
-      {Object.keys(yearlyReport).sort().map(year => (
-        <div key={year} className="card mb-3">
-          <div className="card-header">{year}</div>
-          <ul className="list-group list-group-flush">
-            {Object.keys(yearlyReport[year]).map(habitName => (
-              <li key={habitName} className="list-group-item d-flex justify-content-between align-items-center">
-                {habitName}
-                <span className="badge bg-info rounded-pill">{yearlyReport[year][habitName]} completions</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+        <h4 className="mt-4 mb-3">Yearly Progress</h4>
+        {Object.keys(yearlyReport).sort().map(year => (
+          <div key={year} className="card mb-3">
+            <div className="card-header bg-light">{year}</div>
+            <ul className="list-group list-group-flush">
+              {Object.keys(yearlyReport[year]).map(habitName => (
+                <li key={habitName} className="list-group-item d-flex justify-content-between align-items-center">
+                  {habitName}
+                  <span className="badge bg-info rounded-pill">{yearlyReport[year][habitName]} completions</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

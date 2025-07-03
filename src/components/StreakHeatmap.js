@@ -15,19 +15,21 @@ const StreakHeatmap = ({ habit }) => {
   }));
 
   return (
-    <div className="mt-3">
-      <h6>{habit.name} Streak Heatmap</h6>
-      <CalendarHeatmap
-        startDate={startDate}
-        endDate={endDate}
-        values={values}
-        classForValue={(value) => {
-          if (!value) {
-            return 'color-empty';
-          }
-          return `color-scale-1`;
-        }}
-      />
+    <div className="card shadow-sm mt-4">
+      <div className="card-body">
+        <h5 className="card-title text-primary mb-3">{habit.name} Streak Heatmap</h5>
+        <CalendarHeatmap
+          startDate={startDate}
+          endDate={endDate}
+          values={values}
+          classForValue={(value) => {
+            if (!value) {
+              return 'color-empty';
+            }
+            return `color-scale-1`;
+          }}
+        />
+      </div>
     </div>
   );
 };

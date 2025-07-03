@@ -9,21 +9,24 @@ const HabitList = ({ habits, deleteHabit, trackHabit, categories, addNote, setRe
   }));
 
   return (
-    <div>
+    <div className="habit-list mt-4">
       {habitsByCategory.map((category) => (
-        <div key={category.id}>
-          <h3>{category.name}</h3>
-          {category.habits.map((habit) => (
-            <Habit
-              key={habit.id}
-              habit={habit}
-              deleteHabit={deleteHabit}
-              trackHabit={trackHabit}
-              addNote={addNote}
-              categories={categories}
-              setReminder={setReminder}
-            />
-          ))}
+        <div key={category.id} className="mb-4">
+          <h3 className="text-primary mb-3">{category.name}</h3>
+          <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {category.habits.map((habit) => (
+              <div key={habit._id} className="col">
+                <Habit
+                  habit={habit}
+                  deleteHabit={deleteHabit}
+                  trackHabit={trackHabit}
+                  addNote={addNote}
+                  categories={categories}
+                  setReminder={setReminder}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       ))}
     </div>
