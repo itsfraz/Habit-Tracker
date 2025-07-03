@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
 const Habit = require('../models/Habit');
+const auth = require('../middleware/auth');
 
 // @route   GET api/habits
 // @desc    Get all habits for a user
@@ -52,7 +52,7 @@ router.put('/:id', auth, async (req, res) => {
   if (name) habitFields.name = name;
   if (category) habitFields.category = category;
   if (frequency) habitFields.frequency = frequency;
-  if (typeof isTimeBased === 'boolean') habitFields.isTimeBased = isTimeBased;
+ 
   if (targetDuration) habitFields.targetDuration = targetDuration;
   if (history) habitFields.history = history;
   if (notes) habitFields.notes = notes;
