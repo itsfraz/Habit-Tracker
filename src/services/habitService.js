@@ -27,9 +27,12 @@ const deleteHabit = (id) => {
   return axios.delete(API_URL + id, { headers: getAuthHeader() });
 };
 
-export default {
+// Assign to variable before exporting
+const habitService = {
   getHabits,
   addHabit,
   updateHabit,
-  deleteHabit,
+  deleteHabit
 };
+
+export default habitService;
